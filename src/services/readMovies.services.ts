@@ -1,10 +1,11 @@
 import { AppDataSource } from "../data-source"
 import { Movie } from "../entities"
-import { iMovieRepo} from "../interfaces/movies.interface"
+import { iMovieRepo } from "../interfaces/movies.interface"
 import { arrayMoviesSchema } from "../schemas"
+import { FindOptionsOrder } from "typeorm/find-options/FindOptionsOrder"
 
 
-const readMoviesService = async (perPage: any, page: any) => {
+const readMoviesService = async (perPage: any, page: any, sort: any,  order: any) => {
 
     const moviesRopository: iMovieRepo = AppDataSource.getRepository(Movie)
 
@@ -14,10 +15,26 @@ const readMoviesService = async (perPage: any, page: any) => {
     if(take < 0){
         take = 5
     }
+   
+    const idSortOrder: FindOptionsOrder<Movie> = {
+        id: {
+            direction: "ASC"
+        }
+    }
+
+    const arraySortOrder = [[sort, {direction: order} ]] 
+
+    let newSortOrder: FindOptionsOrder<Movie> = Object.fromEntries(arraySortOrder)
+
+    if(sort === undefined){
+        newSortOrder = idSortOrder
+    }
 
     const[ findMovies, count ]= await moviesRopository.findAndCount({
+        order: newSortOrder,
         take,
         skip: take * (skip - 1),
+        
     })
 
     const resultMovies =  arrayMoviesSchema.parse(findMovies)

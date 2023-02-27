@@ -16,6 +16,7 @@ const  movieSchema = movieCreateSchema.extend({
 const returnMoviesSchema = movieSchema.array()
 
 const arrayMoviesSchema = z.array(movieSchema)
+
   
 export {
     movieSchema,
