@@ -12,8 +12,12 @@ const readMoviesService = async (perPage: any, page: any, sort: any,  order: any
     let take: number = Number(perPage) || 5
     let skip: number = Number(page) || 1 
 
-    if(take < 0){
+    if(take < 0 || take > 5){
         take = 5
+    }
+
+    if(skip <= 0){
+        skip = 1
     }
    
     const idSortOrder: FindOptionsOrder<Movie> = {
@@ -30,21 +34,29 @@ const readMoviesService = async (perPage: any, page: any, sort: any,  order: any
         newSortOrder = idSortOrder
     }
 
-    const[ findMovies, count ]= await moviesRopository.findAndCount({
+    const findMovies = await moviesRopository.find({
+        order: newSortOrder,
+        take,
+        skip: take * ((skip + 1) - 1),
+        
+    })
+   
+    const[ listMovies, count ]= await moviesRopository.findAndCount({
         order: newSortOrder,
         take,
         skip: take * (skip - 1),
         
     })
 
-    const resultMovies =  arrayMoviesSchema.parse(findMovies)
-
-   
+    const resultMovies =  arrayMoviesSchema.parse(listMovies)
 
     const baseUrl: string  = `http://localhost:3000/movies`
     let prevPage: string | null = `${baseUrl}?page=${skip -1}&perPage=${take}`
     let nextPage: string | null = `${baseUrl}?page=${skip +1}&perPage=${take}`
 
+    if(findMovies.length === 0){
+        nextPage = null
+    }
 
     if(skip <= 1){
         prevPage = null
@@ -56,6 +68,8 @@ const readMoviesService = async (perPage: any, page: any, sort: any,  order: any
         count,
         data: resultMovies
     }
+
+    
 
     return  pagination
 
